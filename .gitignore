@@ -1,0 +1,8 @@
+.secret_key
+instance/
+uploads/
+__pycache__/
+*.pyc
+*.pyo
+.env
+logs/
