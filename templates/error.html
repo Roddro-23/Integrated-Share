@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integrated Share · Error</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="auth-card" style="text-align:center">
+        <div class="app-header" style="justify-content:center;margin-bottom:1.5rem">
+            <i class="fas fa-share-nodes"></i>
+            <h1>Integrated Share <span>oops</span></h1>
+        </div>
+        <i class="fas fa-circle-exclamation" style="font-size:3rem;color:#c0392b;margin-bottom:1rem;display:block"></i>
+        <p style="color:#112b44;font-size:1rem;font-weight:500;margin-bottom:1.5rem">{{ message }}</p>
+        <a href="/" style="display:inline-flex;align-items:center;gap:.4rem;color:#1e4f8a;font-weight:500;text-decoration:none;font-size:.9rem;">
+            <i class="fas fa-arrow-left"></i> Go back to the app
+        </a>
+    </div>
+</body>
+</html>
