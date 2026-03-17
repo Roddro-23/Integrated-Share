@@ -9,7 +9,7 @@
 ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat&logo=python&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-2.3-000000?style=flat&logo=flask&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-003B57?style=flat&logo=sqlite&logoColor=white)
-<!-- ![Visitors](https://visitor-badge.laobi.icu/badge?page_id=InferiorAK.Integrated-Share) -->
+![Visitors](https://visitor-badge.laobi.icu/badge?page_id=InferiorAK.Integrated-Share)
 
 *Team 0xTJRS23*
 
