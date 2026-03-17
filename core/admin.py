@@ -6,8 +6,8 @@ from flask import (Blueprint, render_template, session, jsonify,
                    request, redirect, url_for, current_app)
 
 from .extensions import db
-from .models import User, SharedFile, FileShare, ActivityLog
-from .utils import login_required, admin_required, format_file_size
+from .models import User, SharedFile, FileShare, FolderShare, ActivityLog
+from .utils import login_required, admin_required, format_file_size, log_action
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -29,7 +29,7 @@ def admin_stats():
     return jsonify({
         'total_users':   User.query.count(),
         'total_files':   SharedFile.query.count(),
-        'total_shares':  FileShare.query.count(),
+        'total_shares':  (FileShare.query.count() + FolderShare.query.count()),
         'total_storage': format_file_size(total_storage),
     })
 
@@ -63,6 +63,7 @@ def admin_delete_user(user_id):
     user_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], user_id)
     if os.path.exists(user_folder):
         shutil.rmtree(user_folder)
+    log_action('admin_delete_user', user.username)
     db.session.delete(user)
     db.session.commit()
     return jsonify({'success': True})
@@ -72,7 +73,7 @@ def admin_delete_user(user_id):
 @login_required
 @admin_required
 def admin_get_files():
-    files = SharedFile.query.order_by(SharedFile.uploaded_at.desc()).all()
+    files = SharedFile.query.filter_by(is_deleted=False).order_by(SharedFile.uploaded_at.desc()).all()
     return jsonify([{
         'id':            f.id,
         'original_name': f.original_name,
@@ -94,6 +95,7 @@ def admin_delete_file(file_id):
         os.remove(file_path)
     if f.owner:
         f.owner.storage_used = max(0, (f.owner.storage_used or 0) - f.size)
+    log_action('admin_delete_file', f.original_name)
     db.session.delete(f)
     db.session.commit()
     return jsonify({'success': True})
@@ -114,3 +116,54 @@ def admin_get_logs():
         'ip_address':     l.ip_address or '—',
         'outcome':        l.outcome or 'SUCCESS',
     } for l in logs])
+
+
+@admin_bp.route('/api/admin/shares', methods=['GET'])
+@login_required
+@admin_required
+def admin_get_shares():
+    file_shares = FileShare.query.order_by(FileShare.created_at.desc()).all()
+    folder_shares = FolderShare.query.order_by(FolderShare.created_at.desc()).all()
+    items = []
+
+    for s in file_shares:
+        items.append({
+            'id': s.id,
+            'type': 'file',
+            'target': s.file.original_name if s.file else '—',
+            'owner': db.session.get(User, s.shared_by).username if db.session.get(User, s.shared_by) else '—',
+            'active': s.is_active,
+            'expires_at': datetime.fromtimestamp(s.expires_at).strftime('%Y-%m-%d %H:%M') if s.expires_at else '—',
+            'scope': 'public' if not s.shared_with else 'user',
+        })
+    for s in folder_shares:
+        items.append({
+            'id': s.id,
+            'type': 'folder',
+            'target': s.folder.name if s.folder else '—',
+            'owner': db.session.get(User, s.shared_by).username if db.session.get(User, s.shared_by) else '—',
+            'active': s.is_active,
+            'expires_at': datetime.fromtimestamp(s.expires_at).strftime('%Y-%m-%d %H:%M') if s.expires_at else '—',
+            'scope': 'public' if not s.shared_with else 'user',
+        })
+    items.sort(key=lambda x: x['expires_at'], reverse=True)
+    return jsonify(items)
+
+
+@admin_bp.route('/api/admin/shares/<share_type>/<share_id>', methods=['DELETE'])
+@login_required
+@admin_required
+def admin_revoke_share(share_type, share_id):
+    if share_type == 'file':
+        share = db.session.get(FileShare, share_id)
+    elif share_type == 'folder':
+        share = db.session.get(FolderShare, share_id)
+    else:
+        return jsonify({'error': 'Invalid share type'}), 400
+
+    if not share:
+        return jsonify({'error': 'Share not found'}), 404
+    share.is_active = False
+    log_action('admin_delete_file', f'revoke_{share_type}_share')
+    db.session.commit()
+    return jsonify({'success': True})
