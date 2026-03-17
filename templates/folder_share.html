@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared Folder · Integrated Share</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="admin-body">
+<div class="admin-wrap">
+    <div class="admin-topbar">
+        <div class="admin-topbar-left">
+            <div class="admin-brand"><img src="{{ url_for('static', filename='images/Logo.png') }}" alt="Integrated Share" class="admin-brand-logo"> Shared Folder</div>
+            <span class="admin-back">{{ folder.name }}</span>
+        </div>
+    </div>
+
+    <div class="tbl-wrap">
+        <table>
+            <thead>
+                <tr><th>Filename</th><th>Size</th><th>Uploaded</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% if files %}
+                    {% for f in files %}
+                    <tr>
+                        <td>{{ f.original_name }}</td>
+                        <td>{{ (f.size / 1024)|round(1) }} KB</td>
+                        <td>{{ f.uploaded_at|int }}</td>
+                        <td>
+                            <div class="shared-actions">
+                            <a class="del-btn" style="text-decoration:none;border-color:#DADCE0;color:#444746;"
+                               target="_blank" href="{{ url_for('share.view_from_folder_share', token=token, file_id=f.id) }}">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a class="del-btn" style="text-decoration:none;"
+                               href="{{ url_for('share.download_from_folder_share', token=token, file_id=f.id) }}">
+                                <i class="fas fa-download"></i>
+                            </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr class="empty-row"><td colspan="4">No files in this shared folder</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>
